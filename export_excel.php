@@ -1,11 +1,17 @@
 <?php
+session_start();
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit();
+}
+
 include 'koneksi.php';
+$current_user_id = $_SESSION['user_id'];
 
-// Header untuk memberi tahu browser bahwa file ini adalah Excel (.xls)
 header("Content-type: application/vnd-ms-excel");
-header("Content-Disposition: attachment5; filename=Laporan_Keuangan_Dara.xls");
+header("Content-Disposition: attachment; filename=Laporan_Keuangan_Dara.xls");
 
-$query = mysqli_query($koneksi, "SELECT * FROM transaksi ORDER BY tanggal ASC, id ASC");
+$query = mysqli_query($koneksi, "SELECT * FROM transaksi WHERE user_id='$current_user_id' ORDER BY tanggal ASC, id ASC");
 ?>
 
 <h3 style="text-align: center;">Laporan Keuangan Rumah Tangga</h3>

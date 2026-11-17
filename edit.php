@@ -1,8 +1,15 @@
 <?php
-include 'koneksi.php';
+session_start();
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit();
+}
 
+include 'koneksi.php';
+$current_user_id = $_SESSION['user_id'];
 $id = $_GET['id'] ?? '';
-$query = mysqli_query($koneksi, "SELECT * FROM transaksi WHERE id='$id'");
+
+$query = mysqli_query($koneksi, "SELECT * FROM transaksi WHERE id='$id' AND user_id='$current_user_id'");
 $data  = mysqli_fetch_assoc($query);
 
 if (!$data) {
@@ -23,7 +30,7 @@ if (isset($_POST['update'])) {
             jenis='$jenis', 
             jumlah='$jumlah', 
             keterangan='$keterangan' 
-            WHERE id='$id'";
+            WHERE id='$id' AND user_id='$current_user_id'";
 
     if (mysqli_query($koneksi, $sql)) {
         header("Location: index.php");

@@ -1,17 +1,25 @@
 <?php
-include 'koneksi.php';
+session_start();
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit();
+}
 
-// Menghitung Total Pemasukan & Pengeluaran
-$q_in  = mysqli_query($koneksi, "SELECT SUM(jumlah) AS total FROM transaksi WHERE jenis='pemasukan'");
+include 'koneksi.php';
+$current_user_id =$_SESSION['user_id'];
+$nama_user =$_SESSION['nama_lengkap'];
+
+// Menghitung Total Pemasukan & Pengeluaran berdasarkan user yang login
+$q_in  = mysqli_query($koneksi, "SELECT SUM(jumlah) AS total FROM transaksi WHERE jenis='pemasukan' AND user_id='$current_user_id'");
 $total_masuk = mysqli_fetch_assoc($q_in)['total'] ?? 0;
 
-$q_out = mysqli_query($koneksi, "SELECT SUM(jumlah) AS total FROM transaksi WHERE jenis='pengeluaran'");
+$q_out = mysqli_query($koneksi, "SELECT SUM(jumlah) AS total FROM transaksi WHERE jenis='pengeluaran' AND user_id='$current_user_id'");
 $total_keluar = mysqli_fetch_assoc($q_out)['total'] ?? 0;
 
-$saldo_total = $total_masuk - $total_keluar;
+$saldo_total = $total_masuk -$total_keluar;
 
-// Ambil Data Transaksi
-$query = mysqli_query($koneksi, "SELECT * FROM transaksi ORDER BY tanggal ASC, id ASC");
+// Ambil Data Transaksi milik user tersebut
+$query = mysqli_query($koneksi, "SELECT * FROM transaksi WHERE user_id='$current_user_id' ORDER BY tanggal ASC, id ASC");
 ?>
 
 <!DOCTYPE html>
@@ -37,8 +45,10 @@ $query = mysqli_query($koneksi, "SELECT * FROM transaksi ORDER BY tanggal ASC, i
                 <li class="active"><a href="index.php"><i class="fa-solid fa-chart-pie"></i> Dashboard</a></li>
                 <li><a href="rekap.php"><i class="fa-solid fa-file-invoice-dollar"></i> Rekap Masuk & Keluar</a></li>
                 <li><a href="create.php"><i class="fa-solid fa-circle-plus"></i> Tambah Transaksi</a></li>
+                <li><a href="ganti_password.php"><i class="fa-solid fa-key"></i> Ganti Password</a></li>
                 <li><a href="export_excel.php" target="_blank"><i class="fa-solid fa-file-excel"></i> Export Excel</a></li>
                 <li><a href="#" onclick="window.print()"><i class="fa-solid fa-file-pdf"></i> Export PDF</a></li>
+                <li style="margin-top: 20px;"><a href="logout.php" style="color: #ff8080;" onclick="return confirm('Yakin ingin keluar dari akun?')"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
             </ul>
         </aside>
 
@@ -48,13 +58,12 @@ $query = mysqli_query($koneksi, "SELECT * FROM transaksi ORDER BY tanggal ASC, i
             <header class="topbar no-print">
                 <div class="topbar-title">Sistem Keuangan Rumah Tangga</div>
                 <div class="user-profile">
-                    <i class="fa-solid fa-user-shield"></i> <span>Dara Puspita Sari</span>
+                    <i class="fa-solid fa-user-shield"></i> <span><?= htmlspecialchars($nama_user); ?></span>
                 </div>
             </header>
 
             <div class="container">
                 
-                <!-- BANNER PINTASAN KE HALAMAN REKAP -->
                 <div class="dashboard-shortcut-banner no-print">
                     <div class="shortcut-info">
                         <h3><i class="fa-solid fa-file-invoice-dollar"></i> Halaman Jumlah Pemasukan & Pengeluaran</h3>
